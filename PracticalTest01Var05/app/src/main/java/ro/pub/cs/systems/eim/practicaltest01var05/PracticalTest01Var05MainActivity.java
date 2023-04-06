@@ -4,8 +4,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -26,6 +30,10 @@ public class PracticalTest01Var05MainActivity extends AppCompatActivity {
 
     private int numberOfClicks = 0;
 
+    private int serviceStatus = Constants.SERVICE_STOPPED;
+
+    private IntentFilter intentFilter = new IntentFilter();
+
 
     private class ButtonClickListener implements View.OnClickListener {
         @Override
@@ -37,6 +45,21 @@ public class PracticalTest01Var05MainActivity extends AppCompatActivity {
                 textView.setText(((Button) view).getText());
             }
             numberOfClicks++;
+
+            if (numberOfClicks > Constants.THRESHOLD && serviceStatus == Constants.SERVICE_STOPPED) {
+                Intent intent = new Intent(getApplicationContext(), PracticalTest01Var05Service.class);
+                intent.putExtra(Constants.CURRENT_TEXT, textView.getText() + " " + numberOfClicks);
+                getApplicationContext().startService(intent);
+                serviceStatus = Constants.SERVICE_STARTED;
+            }
+        }
+    }
+
+    private MessageBroadcastReceiver messageBroadcastReceiver = new MessageBroadcastReceiver();
+    private class MessageBroadcastReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(Constants.BROADCAST_RECEIVER_TAG, intent.getStringExtra(Constants.BROADCAST_RECEIVER_EXTRA));
         }
     }
 
@@ -67,6 +90,8 @@ public class PracticalTest01Var05MainActivity extends AppCompatActivity {
         Toast.makeText(this, "Number of clicks: " + String.valueOf(numberOfClicks), Toast.LENGTH_SHORT).show();
 
 
+        intentFilter.addAction(Constants.ACTION_STRING);
+
         navigateButton = findViewById(R.id.navigate_button);
         navigateButton.setOnClickListener(view -> {
             Intent intent = new Intent(getApplicationContext(), PracticalTest01Var05SecondaryActivity.class);
@@ -89,5 +114,24 @@ public class PracticalTest01Var05MainActivity extends AppCompatActivity {
             textView.setText("");
             numberOfClicks = 0;
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        registerReceiver(messageBroadcastReceiver, intentFilter);
+    }
+
+    @Override
+    protected void onPause() {
+        unregisterReceiver(messageBroadcastReceiver);
+        super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        Intent intent = new Intent(this, PracticalTest01Var05Service.class);
+        stopService(intent);
+        super.onDestroy();
     }
 }
