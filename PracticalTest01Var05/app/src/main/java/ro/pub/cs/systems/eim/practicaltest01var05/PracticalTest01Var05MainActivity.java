@@ -1,8 +1,10 @@
 package ro.pub.cs.systems.eim.practicaltest01var05;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -63,11 +65,29 @@ public class PracticalTest01Var05MainActivity extends AppCompatActivity {
         }
 
         Toast.makeText(this, "Number of clicks: " + String.valueOf(numberOfClicks), Toast.LENGTH_SHORT).show();
+
+
+        navigateButton = findViewById(R.id.navigate_button);
+        navigateButton.setOnClickListener(view -> {
+            Intent intent = new Intent(getApplicationContext(), PracticalTest01Var05SecondaryActivity.class);
+            intent.putExtra(Constants.PRIMARY_TEXT, String.valueOf(textView.getText()));
+            startActivityForResult(intent, Constants.SECONDARY_ACTIVITY_REQUEST_CODE);
+        });
     }
 
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putInt(Constants.NUMBER_OF_CLICKS, numberOfClicks);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == Constants.SECONDARY_ACTIVITY_REQUEST_CODE) {
+            Toast.makeText(this, "The activity returned: " + resultCode, Toast.LENGTH_LONG).show();
+            textView.setText("");
+            numberOfClicks = 0;
+        }
     }
 }
